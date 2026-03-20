@@ -1,0 +1,58 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String           @id @default(cuid())
+  email           String           @unique
+  name            String?
+  teamMemberships TeamMember[]
+  sentInvitations TeamInvitation[] @relation("InvitedBy")
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model Team {
+  id          String           @id @default(cuid())
+  name        String
+  members     TeamMember[]
+  invitations TeamInvitation[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("member")
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([teamId, userId])
+}
+
+model TeamInvitation {
+  id          String    @id @default(cuid())
+  email       String
+  teamId      String
+  // token has no @default — generated via crypto.randomBytes(32) in application code
+  token       String    @unique
+  expiresAt   DateTime
+  invitedById String
+  acceptedAt  DateTime?
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedBy   User      @relation("InvitedBy", fields: [invitedById], references: [id])
+  createdAt   DateTime  @default(now())
+
+  @@index([email])
+  @@index([teamId])
+}

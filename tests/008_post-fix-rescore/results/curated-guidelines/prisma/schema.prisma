@@ -1,0 +1,150 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  passwordHash        String               @map("password_hash")
+  name                String?
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+
+  tasks               Task[]               @relation("TaskCreator")
+  assignedTasks       Task[]               @relation("TaskAssignee")
+  categories          Category[]
+  ownedTeams          Team[]               @relation("TeamOwner")
+  teamMemberships     TeamMember[]
+  passwordResetTokens PasswordResetToken[]
+  teamInvitations     TeamInvitation[]     @relation("InviterRelation")
+
+  @@map("users")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_reset_tokens")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  ownerId     String   @map("owner_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  owner       User           @relation("TeamOwner", fields: [ownerId], references: [id])
+  members     TeamMember[]
+  tasks       Task[]
+  categories  Category[]
+  invitations TeamInvitation[]
+
+  @@map("teams")
+}
+
+enum TeamRole {
+  OWNER
+  MEMBER
+  VIEWER
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String   @map("team_id")
+  userId    String   @map("user_id")
+  role      TeamRole @default(MEMBER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+  @@map("team_members")
+}
+
+model TeamInvitation {
+  id        String   @id @default(cuid())
+  teamId    String   @map("team_id")
+  email     String
+  token     String   @unique
+  role      TeamRole @default(MEMBER)
+  invitedBy String   @map("invited_by")
+  expiresAt DateTime @map("expires_at")
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  team    Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  inviter User @relation("InviterRelation", fields: [invitedBy], references: [id])
+
+  @@map("team_invitations")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String       @db.VarChar(200)
+  description String?      @db.VarChar(2000)
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?    @map("due_date")
+  creatorId   String       @map("creator_id")
+  assigneeId  String?      @map("assignee_id")
+  categoryId  String?      @map("category_id")
+  teamId      String?      @map("team_id")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  creator  User      @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignee User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+  team     Team?     @relation(fields: [teamId], references: [id])
+
+  @@index([creatorId])
+  @@index([assigneeId])
+  @@index([categoryId])
+  @@index([teamId])
+  @@index([status])
+  @@index([priority])
+  @@map("tasks")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(50)
+  color     String   @db.VarChar(7)
+  userId    String?  @map("user_id")
+  teamId    String?  @map("team_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team  Team?  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@map("categories")
+}

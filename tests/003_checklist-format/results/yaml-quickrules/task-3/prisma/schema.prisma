@@ -1,0 +1,83 @@
+// prisma/schema.prisma
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ---------------------------------------------------------------------------
+// Existing models (abbreviated — extend as needed)
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teamMemberships TeamMember[]
+  sentInvitations TeamInvitation[] @relation("InviterInvitations")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     TeamMember[]
+  invitations TeamInvitation[]
+}
+
+model TeamMember {
+  teamId    String
+  userId    String
+  role      TeamMemberRole @default(MEMBER)
+  createdAt DateTime       @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+}
+
+enum TeamMemberRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+// ---------------------------------------------------------------------------
+// Team invitation (new model)
+// ---------------------------------------------------------------------------
+
+model TeamInvitation {
+  id           String               @id @default(cuid())
+  teamId       String
+  inviterId    String
+  inviteeEmail String
+  /// Cryptographically secure 256-bit token stored as hex (64 chars)
+  token        String               @unique
+  status       TeamInvitationStatus @default(PENDING)
+  expiresAt    DateTime
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  team    Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  inviter User @relation("InviterInvitations", fields: [inviterId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([inviteeEmail])
+}
+
+enum TeamInvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}

@@ -1,0 +1,39 @@
+// Prisma schema additions for password reset flow
+// Add these models/fields to your existing schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Existing User model (abbreviated — add the relation field)
+model User {
+  id                  String               @id @default(cuid())
+  email               String               @unique
+  passwordHash        String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  // Add this relation to your existing User model
+  passwordResetTokens PasswordResetToken[]
+}
+
+// New model — add this to your schema
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  /// SHA-256 hash of the raw token sent in the email. Never store plaintext.
+  tokenHash String    @unique
+  userId    String
+  expiresAt DateTime
+  /// Set when the token is consumed; prevents reuse without deletion.
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}

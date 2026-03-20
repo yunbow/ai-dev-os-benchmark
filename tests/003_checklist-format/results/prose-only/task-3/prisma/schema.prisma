@@ -1,0 +1,64 @@
+// prisma/schema.prisma
+// Excerpt — only the models relevant to the team invitation system.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  displayName String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teamMemberships TeamMember[]
+  sentInvitations TeamInvitation[] @relation("InviterRelation")
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     TeamMember[]
+  invitations TeamInvitation[]
+}
+
+model TeamMember {
+  teamId    String
+  userId    String
+  role      String   @default("member") // e.g. "owner" | "admin" | "member"
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([teamId, userId])
+}
+
+/// Tracks pending (and historical) team invitations.
+model TeamInvitation {
+  id        String   @id @default(cuid())
+  teamId    String
+  inviterId String
+  email     String
+  /// 64-char lowercase hex string (256-bit random token)
+  token     String   @unique
+  status    String   @default("pending") // "pending" | "accepted" | "expired" | "revoked"
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  team    Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  inviter User @relation("InviterRelation", fields: [inviterId], references: [id])
+
+  @@index([email, teamId, status])
+  @@index([token])
+}

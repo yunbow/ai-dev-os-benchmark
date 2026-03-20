@@ -1,0 +1,135 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  email               String    @unique
+  name                String
+  password            String
+  role                String    @default("user") // user, admin
+  twoFactorEnabled    Boolean   @default(false)
+  twoFactorSecret     String?
+  failedLoginAttempts Int       @default(0)
+  lockedUntil         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  tasks              Task[]
+  teamMemberships    TeamMember[]
+  createdTeams       Team[]
+  loginHistory       LoginHistory[]
+  sessions           UserSession[]
+  passwordResets     PasswordReset[]
+  sentInvitations    TeamInvitation[]
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  device    String?
+  ip        String?
+  country   String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model LoginHistory {
+  id        String   @id @default(cuid())
+  userId    String
+  country   String?
+  ip        String?
+  browser   String?
+  os        String?
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  status      String    @default("todo") // todo, in_progress, done
+  priority    String    @default("medium") // low, medium, high
+  dueDate     DateTime?
+  userId      String
+  teamId      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team? @relation(fields: [teamId], references: [id])
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User             @relation(fields: [ownerId], references: [id])
+  members     TeamMember[]
+  tasks       Task[]
+  invitations TeamInvitation[]
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("member") // member, admin
+  createdAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+model TeamInvitation {
+  id          String   @id @default(cuid())
+  email       String
+  teamId      String
+  token       String   @unique
+  expiresAt   DateTime
+  used        Boolean  @default(false)
+  invitedById String
+  createdAt   DateTime @default(now())
+
+  team      Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  invitedBy User @relation(fields: [invitedById], references: [id])
+}
+
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  externalId String   @unique
+  status     String // processing, completed, failed
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

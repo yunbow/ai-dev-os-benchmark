@@ -1,0 +1,13 @@
+import { RegisterForm } from "@/features/auth/components/register-form";
+
+export const metadata = {
+  title: "Create Account - TaskFlow",
+};
+
+export default function RegisterPage() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+      <RegisterForm />
+    </div>
+  );
+}

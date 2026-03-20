@@ -1,0 +1,187 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  password      String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts        Account[]
+  sessions        Session[]
+  tasks           Task[]            @relation("TaskCreator")
+  assignedTasks   Task[]            @relation("TaskAssignee")
+  categories      Category[]
+  teamMemberships TeamMember[]
+  ownedTeams      Team[]
+  passwordResets  PasswordReset[]
+
+  @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model PasswordReset {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_resets")
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  title       String       @db.VarChar(200)
+  description String?      @db.VarChar(2000)
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  creatorId  String
+  assigneeId String?
+  categoryId String?
+  teamId     String?
+
+  creator  User      @relation("TaskCreator", fields: [creatorId], references: [id])
+  assignee User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  category Category? @relation(fields: [categoryId], references: [id])
+  team     Team?     @relation(fields: [teamId], references: [id])
+
+  @@map("tasks")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(50)
+  color     String   @db.VarChar(7)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String?
+  teamId String?
+
+  user  User?  @relation(fields: [userId], references: [id])
+  team  Team?  @relation(fields: [teamId], references: [id])
+  tasks Task[]
+
+  @@map("categories")
+}
+
+enum TeamRole {
+  OWNER
+  MEMBER
+  VIEWER
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ownerId String
+
+  owner       User             @relation(fields: [ownerId], references: [id])
+  members     TeamMember[]
+  tasks       Task[]
+  categories  Category[]
+  invitations TeamInvitation[]
+
+  @@map("teams")
+}
+
+model TeamMember {
+  id       String   @id @default(cuid())
+  role     TeamRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  userId String
+  teamId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@map("team_members")
+}
+
+model TeamInvitation {
+  id         String    @id @default(cuid())
+  email      String
+  token      String    @unique
+  role       TeamRole  @default(MEMBER)
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  teamId String
+  team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@map("team_invitations")
+}
