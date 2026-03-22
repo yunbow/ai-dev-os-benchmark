@@ -135,7 +135,12 @@ ai-dev-os-benchmark/
 | リポジトリ | 説明 |
 |---|---|
 | [ai-dev-os](https://github.com/yunbow/ai-dev-os) | フレームワーク仕様と理論 |
-| [ai-dev-os-rules-typescript](https://github.com/yunbow/ai-dev-os-rules-typescript) | 本ベンチマークで使用する TypeScript / Next.js ガイドライン |
+| [rules-typescript](https://github.com/yunbow/ai-dev-os-rules-typescript) | TypeScript / Next.js / Node.js ガイドライン |
+| [rules-python](https://github.com/yunbow/ai-dev-os-rules-python) | Python / FastAPI ガイドライン |
+| [plugin-claude-code](https://github.com/yunbow/ai-dev-os-plugin-claude-code) | Claude Code 用 Skills, Hooks, Agents |
+| [plugin-kiro](https://github.com/yunbow/ai-dev-os-plugin-kiro) | Kiro 用 Steering Rules, Hooks |
+| [plugin-cursor](https://github.com/yunbow/ai-dev-os-plugin-cursor) | Cursor Rules (.mdc) |
+| [cli](https://github.com/yunbow/ai-dev-os-cli) | セットアップ・更新・診断 CLI |
 
 ## ライセンス
 

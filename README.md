@@ -135,7 +135,12 @@ ai-dev-os-benchmark/
 | Repository | Description |
 |---|---|
 | [ai-dev-os](https://github.com/yunbow/ai-dev-os) | Framework specification and theory |
-| [ai-dev-os-rules-typescript](https://github.com/yunbow/ai-dev-os-rules-typescript) | TypeScript / Next.js guidelines used in this benchmark |
+| [rules-typescript](https://github.com/yunbow/ai-dev-os-rules-typescript) | TypeScript / Next.js / Node.js guidelines |
+| [rules-python](https://github.com/yunbow/ai-dev-os-rules-python) | Python / FastAPI guidelines |
+| [plugin-claude-code](https://github.com/yunbow/ai-dev-os-plugin-claude-code) | Skills, Hooks, and Agents for Claude Code |
+| [plugin-kiro](https://github.com/yunbow/ai-dev-os-plugin-kiro) | Steering Rules and Hooks for Kiro |
+| [plugin-cursor](https://github.com/yunbow/ai-dev-os-plugin-cursor) | Cursor Rules (.mdc) |
+| [cli](https://github.com/yunbow/ai-dev-os-cli) | `npx ai-dev-os init` |
 
 ## License
 
