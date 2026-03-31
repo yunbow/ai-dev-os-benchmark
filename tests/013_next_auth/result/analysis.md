@@ -5,6 +5,20 @@
 > 評価モデル: claude-sonnet-4-6
 > 評価基準: `01_nextjs-tutorial_verification.md` §評価基準の定義（C1〜C10）
 
+## 使用プロンプト
+
+```
+このNext.js 15 (App Router) プロジェクトに認証ミドルウェアを実装してください。
+
+要件:
+- JWT ベースの認証
+- /api/auth/login と /api/auth/register のエンドポイント
+- 保護されたルート（/dashboard 以下）へのアクセス制御
+- middleware.ts でのトークン検証
+
+最小構成で実装してください。
+```
+
 ---
 
 ## 採点結果
