@@ -1,0 +1,29 @@
+{
+  "name": "nextjs-task-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "db:push": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "next": "^15",
+    "react": "^19",
+    "react-dom": "^19",
+    "drizzle-orm": "^0.44",
+    "better-sqlite3": "^11",
+    "zod": "^3"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.30",
+    "@types/better-sqlite3": "^7",
+    "typescript": "^5",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19"
+  }
+}

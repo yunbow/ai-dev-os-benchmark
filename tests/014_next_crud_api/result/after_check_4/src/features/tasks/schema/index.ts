@@ -1,0 +1,15 @@
+import { z } from 'zod'
+
+export const taskStatusSchema = z.enum(['pending', 'in_progress', 'done'])
+
+export const createTaskSchema = z.object({
+  title:       z.string().min(1).max(255),
+  description: z.string().optional(),
+  status:      taskStatusSchema.default('pending'),
+  dueDate:     z.string().datetime({ offset: true }).optional().refine(
+    (val) => val === undefined || new Date(val) > new Date(),
+    { message: 'dueDate must be in the future' },
+  ),
+})
+
+export const updateTaskSchema = createTaskSchema.partial()
